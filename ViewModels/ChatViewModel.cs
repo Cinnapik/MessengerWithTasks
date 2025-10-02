@@ -1,5 +1,4 @@
 // C:\Users\St\MessengerWithTasks\MessengerApp\ViewModels\ChatViewModel.cs
-// ViewModel управляет чатом, загрузкой и отправкой сообщений
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MessengerApp.Models;
@@ -15,6 +14,8 @@ namespace MessengerApp.ViewModels
         private readonly ChatService _chatService;
         private readonly AssistantService _assistant;
         private readonly TaskService _taskService;
+
+        public User? CurrentUser { get; set; }
 
         public ObservableCollection<Message> Messages { get; } = new();
         private string _newMessage = string.Empty;
@@ -47,29 +48,53 @@ namespace MessengerApp.ViewModels
 
         private void SendMessage()
         {
-            if (string.IsNullOrWhiteSpace(NewMessage)) return;
+            if (string.IsNullOrWhiteSpace(NewMessage) || CurrentUser == null) return;
+
+            var chatId = SelectedChatIdOrDefault();
+
             var msg = new Message
             {
-                ChatId = "default",
+                ChatId = chatId,
+                Sender = CurrentUser.DisplayName,
                 Content = NewMessage,
                 Timestamp = DateTime.Now,
                 IsSentByMe = true
             };
+
             _chatService.AddMessage(msg);
             Messages.Add(msg);
 
             var lower = NewMessage.ToLowerInvariant();
-            if (lower.Contains("помощь") || lower.Contains("help"))
+            if (lower.Contains("помощь") || lower.Contains("help") || lower.Contains("суммируй") || lower.Contains("создай задачу") || lower.Contains("create task"))
             {
                 var context = Messages.Select(m => m.Content).TakeLast(8).ToList();
-                var taskTitles = _taskService.GetTasks().Select(t => t.Title).ToList();
-                var resp = _assistant.GetResponse("Суммируй", context, taskTitles);
-                var reply = new Message { ChatId = "default", Content = resp, Timestamp = DateTime.Now, IsSentByMe = false };
+                var taskTitles = _task_service_titles();
+
+                var result = _assistant.HandleQuery(NewMessage, context, taskTitles);
+                var resp = result.response;
+                var newTask = result.newTask;
+
+                var reply = new Message { ChatId = chatId, Sender = "Assistant", Content = resp, Timestamp = DateTime.Now, IsSentByMe = false };
                 _chatService.AddMessage(reply);
                 Messages.Add(reply);
+
+                if (newTask != null)
+                {
+                    _taskService.AddTask(newTask);
+                }
             }
 
             NewMessage = string.Empty;
+        }
+
+        private string SelectedChatIdOrDefault()
+        {
+            return "default";
+        }
+
+        private System.Collections.Generic.IEnumerable<string> _task_service_titles()
+        {
+            return _taskService.GetTasks().Select(t => t.Title);
         }
     }
 }

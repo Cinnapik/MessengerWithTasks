@@ -1,5 +1,4 @@
 // C:\Users\St\MessengerWithTasks\MessengerApp\Services\TaskService.cs
-// Сервис работы с задачами
 using MessengerApp.Models;
 using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
@@ -17,7 +16,7 @@ namespace MessengerApp.Services
             using var conn = _storage.GetConnection();
             conn.Open();
             var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT Id, Title, IsDone FROM Tasks";
+            cmd.CommandText = "SELECT Id, Title, IsDone FROM Tasks ORDER BY Id DESC";
             using var rdr = cmd.ExecuteReader();
             while (rdr.Read())
             {
@@ -51,6 +50,16 @@ namespace MessengerApp.Services
             cmd.Parameters.AddWithValue("$title", t.Title ?? string.Empty);
             cmd.Parameters.AddWithValue("$isdone", t.IsDone ? 1 : 0);
             cmd.Parameters.AddWithValue("$id", t.Id);
+            cmd.ExecuteNonQuery();
+        }
+
+        public void DeleteTask(long id)
+        {
+            using var conn = _storage.GetConnection();
+            conn.Open();
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = "DELETE FROM Tasks WHERE Id = $id";
+            cmd.Parameters.AddWithValue("$id", id);
             cmd.ExecuteNonQuery();
         }
     }

@@ -1,15 +1,12 @@
-# Messenger with Tasks and Context Assistant
+# MessengerWithTasks
 
-Минимальный рабочий пример десктоп-мессенджера на WPF (.NET 7) с простым управлением задачами и контекстным помощником.
+WPF (.NET 9) приложение: мессенджер с управлением задач и контекстным помощником.
+
+Требования:
+- .NET 9 SDK
+- Visual Studio Code или Visual Studio
 
 Запуск:
-1. Установите .NET 7 SDK.
-2. dotnet restore
-3. dotnet build
-4. dotnet run
-
-Реализовано:
-- MVVM
-- SQLite локальное хранилище
-- Простая логика помощника (ключевые слова)
-- UI: три панели (чат, список чатов, задачи/ассистент)
+dotnet restore
+dotnet build
+dotnet run

@@ -1,7 +1,7 @@
 // C:\Users\St\MessengerWithTasks\MessengerApp\ViewModels\AssistantViewModel.cs
-// ViewModel помощника собирает контекст из чата и задач и запрашивает ответ
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MessengerApp.Models;
 using MessengerApp.Services;
 using System.Linq;
 
@@ -12,6 +12,7 @@ namespace MessengerApp.ViewModels
         private readonly AssistantService _assistant;
         private readonly ChatViewModel _chatVm;
         private readonly TasksViewModel _tasksVm;
+        private readonly TaskService _taskService;
 
         private string _query = string.Empty;
         public string Query
@@ -29,19 +30,30 @@ namespace MessengerApp.ViewModels
 
         public IRelayCommand AskCommand { get; }
 
-        public AssistantViewModel(AssistantService assistant, ChatViewModel chatVm, TasksViewModel tasksVm)
+        public AssistantViewModel(AssistantService assistant, ChatViewModel chatVm, TasksViewModel tasksVm, TaskService taskService)
         {
-            _assistant = assistant;
-            _chatVm = chatVm;
-            _tasksVm = tasksVm;
+            _assistant = assistant ?? throw new System.ArgumentNullException(nameof(assistant));
+            _chatVm = chatVm ?? throw new System.ArgumentNullException(nameof(chatVm));
+            _tasksVm = tasksVm ?? throw new System.ArgumentNullException(nameof(tasksVm));
+            _taskService = taskService ?? throw new System.ArgumentNullException(nameof(taskService));
             AskCommand = new RelayCommand(Ask);
         }
 
         private void Ask()
         {
-            var recent = _chatVm.Messages.Select(m => m.Content).ToList();
-            var tasks = _tasksVm.Tasks.Select(t => t.Title).ToList();
-            Response = _assistant.GetResponse(Query, recent, tasks);
+            var recent = _chatVm.Messages.Select(m => m.Content);
+            var tasks = _tasksVm.Tasks.Select(t => t.Title);
+
+            var result = _assistant.HandleQuery(Query, recent, tasks);
+            string resp = result.response;
+            TaskItem? newTask = result.newTask;
+
+            Response = resp;
+            if (newTask != null)
+            {
+                _taskService.AddTask(newTask);
+                _tasksVm.Reload();
+            }
         }
     }
 }

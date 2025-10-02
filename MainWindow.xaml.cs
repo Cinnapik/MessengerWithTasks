@@ -1,5 +1,4 @@
-﻿// C:\Users\St\MessengerWithTasks\MessengerApp\MainWindow.xaml.cs
-using System.Windows;
+﻿using System.Windows;
 
 namespace MessengerApp
 {
