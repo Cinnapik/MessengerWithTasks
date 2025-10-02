@@ -1,0 +1,93 @@
+﻿<Window x:Class="MessengerApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:MessengerApp.ViewModels"
+        Title="Messenger with Tasks" Height="720" Width="1100"
+        WindowStartupLocation="CenterScreen" Background="#FF0F1720">
+
+    <Window.DataContext>
+        <vm:MainViewModel />
+    </Window.DataContext>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="320"/>
+        </Grid.ColumnDefinitions>
+        <!-- Left: Chats list -->
+        <Border Grid.Column="0" Background="#FF111827">
+            <StackPanel>
+                <TextBlock Text="Messenger" Foreground="White" FontSize="20" Margin="16"/>
+                <ListBox ItemsSource="{Binding Chats}" SelectedItem="{Binding SelectedChat}"
+                         Background="#FF0F1720" Foreground="White" BorderThickness="0" Margin="8">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="10" Margin="4" CornerRadius="6" Background="#FF111827">
+                                <TextBlock Text="{Binding}" Foreground="White"/>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Button Content="New Chat" Command="{Binding NewChatCommand}" Margin="12" />
+            </StackPanel>
+        </Border>
+        <!-- Center: Chat messages -->
+        <Border Grid.Column="1" Background="#FF0B1220">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="{Binding SelectedChat}" Foreground="White" FontSize="18" Margin="12"/>
+                <ScrollViewer Grid.Row="1" Margin="12" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding ChatVM.Messages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,6">
+                                    <Border Background="#FF1F2937" Padding="8" CornerRadius="8" MaxWidth="600">
+                                        <TextBlock Text="{Binding Content}" Foreground="White" TextWrapping="Wrap"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding Timestamp, StringFormat=t}" Foreground="#FF9CA3AF" FontSize="10" Margin="6,2,0,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="12">
+                    <TextBox Text="{Binding ChatVM.NewMessage, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True" Height="44" VerticalContentAlignment="Center"
+                             Background="#FF111827" Foreground="White" BorderThickness="0" Padding="8" Width="800"/>
+                    <Button Content="Send" Command="{Binding ChatVM.SendMessageCommand}" Margin="8,0,0,0" Padding="12,8"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        <!-- Right: Tasks and Assistant -->
+        <Border Grid.Column="2" Background="#FF0F1720" Padding="12">
+            <StackPanel>
+                <TextBlock Text="Tasks" Foreground="White" FontSize="16" Margin="4"/>
+                <ListBox ItemsSource="{Binding TasksVM.Tasks}" Background="#FF0B1220" Foreground="White" BorderThickness="0" Height="240">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel Margin="4">
+                                <CheckBox IsChecked="{Binding IsDone}" VerticalAlignment="Center" Margin="4"/>
+                                <TextBlock Text="{Binding Title}" Foreground="White" Margin="8,0,0,0"/>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <StackPanel Orientation="Horizontal" Margin="0,8">
+                    <TextBox Text="{Binding TasksVM.NewTaskTitle}" Width="200" Background="#FF111827" Foreground="White" Padding="6"/>
+                    <Button Content="Add" Command="{Binding TasksVM.AddTaskCommand}" Margin="8,0,0,0"/>
+                </StackPanel>
+                <Separator Margin="0,12"/>
+                <TextBlock Text="Assistant" Foreground="White" FontSize="16" Margin="4"/>
+                <TextBox Text="{Binding AssistantVM.Query}" Height="44" Background="#FF111827" Foreground="White" Padding="8"/>
+                <Button Content="Ask" Command="{Binding AssistantVM.AskCommand}" Margin="0,8,0,0"/>
+                <ScrollViewer Height="200" Margin="0,8,0,0" Background="#FF071024">
+                    <TextBlock Text="{Binding AssistantVM.Response}" Foreground="#E6FFFFFF" TextWrapping="Wrap" Padding="8"/>
+                </ScrollViewer>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
