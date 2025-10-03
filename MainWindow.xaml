@@ -1,129 +1,166 @@
 ﻿<Window x:Class="MessengerApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Messenger" Height="760" Width="1200" WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource BgBrush}">
-  <Grid>
-    <Grid.RowDefinitions>
-      <RowDefinition Height="64"/>
-      <RowDefinition Height="*"/>
-    </Grid.RowDefinitions>
+        Title="Messenger" Height="820" Width="1280" WindowStartupLocation="CenterScreen">
+  <Grid Background="{StaticResource BgBrush}">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="320"/> <!-- Левый столбец: поиск + список чатов -->
+      <ColumnDefinition Width="*"/>   <!-- Центр: сообщения -->
+      <ColumnDefinition Width="380"/> <!-- Правая панель: вкладки -->
+    </Grid.ColumnDefinitions>
 
-    <!-- Верхняя панель -->
-    <Border Grid.Row="0" Background="{DynamicResource PanelBrush}" Padding="10">
-      <DockPanel>
-        <TextBlock Text="{Binding TitleBarDisplay}" FontWeight="Bold" VerticalAlignment="Center" />
-        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-          <Border Width="40" Height="40" CornerRadius="20" Background="{Binding CurrentUser.AvatarColor}" Margin="0,0,8,0">
-            <TextBlock Text="{Binding CurrentUser.DisplayName, Converter={StaticResource InitialsConverter}}" 
-                       HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="Bold"/>
-          </Border>
-          <Button Content="Выйти" Command="{Binding SignOutCommand}" Background="#FF374151" Foreground="White" Padding="8" />
+    <!-- LEFT: Поиск и список чатов -->
+    <Border Grid.Column="0" Background="{StaticResource SidebarBrush}" Padding="12">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+          <TextBlock Text="Чаты" FontSize="18" FontWeight="Bold" Margin="0,0,0,6"/>
+          <!-- Убрано свойство PlaceholderText (не поддерживается в WPF) -->
+          <TextBox Style="{StaticResource InputBox}" Text="{Binding ChatFilter}" Height="36" />
+        </StackPanel>
+
+        <ListBox ItemsSource="{Binding Chats}" SelectedItem="{Binding SelectedChat}" BorderThickness="0">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <Grid Margin="6">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="56"/>
+                  <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border Width="48" Height="48" CornerRadius="10" Background="#132230" Grid.Column="0" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="SemiBold"/>
+                </Border>
+                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                  <TextBlock Text="{Binding}" FontWeight="SemiBold"/>
+                  <TextBlock Text="последнее сообщение..." Foreground="{StaticResource MutedBrush}" FontSize="12"/>
+                </StackPanel>
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,12,0,0">
+          <TextBox Text="{Binding NewChatName}" Width="200" Height="36" />
+          <Button Content="Новый" Command="{Binding NewChatCommand}" Style="{StaticResource PrimaryButton}" Margin="8,0,0,0" Width="88"/>
         </StackPanel>
       </DockPanel>
     </Border>
 
-    <!-- Контент -->
-    <Grid Grid.Row="1">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="300"/>
-        <ColumnDefinition Width="*"/>
-        <ColumnDefinition Width="360"/>
-      </Grid.ColumnDefinitions>
+    <!-- CENTER: Сообщения -->
+    <Border Grid.Column="1" Background="{StaticResource BgBrush}" Padding="16">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/> <!-- шапка канала -->
+          <RowDefinition Height="*"/>    <!-- сообщения -->
+          <RowDefinition Height="Auto"/> <!-- ввод -->
+        </Grid.RowDefinitions>
 
-      <!-- Список чатов -->
-      <Border Grid.Column="0" Background="{DynamicResource PanelBrush}" Padding="12">
-        <StackPanel>
-          <TextBlock Text="Чаты" FontSize="18" FontWeight="Bold" Margin="4"/>
-          <ListBox ItemsSource="{Binding Chats}" SelectedItem="{Binding SelectedChat}" Height="640" Margin="0,8,0,0">
-            <ListBox.ItemTemplate>
-              <DataTemplate>
-                <StackPanel Orientation="Horizontal" Margin="6">
-                  <Border Width="40" Height="40" CornerRadius="20" Background="#FF374151" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White"/>
-                  </Border>
-                  <StackPanel Margin="8,0,0,0">
-                    <TextBlock Text="{Binding}" FontWeight="SemiBold"/>
-                    <TextBlock Text="Последнее сообщение..." Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
-                  </StackPanel>
-                </StackPanel>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
-        </StackPanel>
-      </Border>
-
-      <!-- Центр: сообщения -->
-      <Border Grid.Column="1" Background="{DynamicResource BgBrush}" Padding="12">
-        <Grid>
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-          </Grid.RowDefinitions>
-
-          <TextBlock Text="{Binding SelectedChat}" FontSize="18" FontWeight="Bold" Margin="4"/>
-
-          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,8,0,0">
-            <ItemsControl ItemsSource="{Binding ChatVM.Messages}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Grid Margin="8">
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="Auto"/>
-                      <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <Border Grid.Column="1" Background="{Binding IsSentByMe, Converter={StaticResource BoolToBrushConverter}}" 
-                            Padding="12" CornerRadius="12" MaxWidth="760">
-                      <StackPanel>
-                        <TextBlock Text="{Binding Sender}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
-                        <TextBlock Text="{Binding Content}" TextWrapping="Wrap" Margin="0,6,0,0"/>
-                        <TextBlock Text="{Binding Timestamp, StringFormat=t}" Foreground="{DynamicResource TextMutedBrush}" FontSize="10" HorizontalAlignment="Right" Margin="0,6,0,0"/>
-                      </StackPanel>
-                    </Border>
-                  </Grid>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-          </ScrollViewer>
-
-          <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0" HorizontalAlignment="Left">
-            <TextBox Text="{Binding ChatVM.NewMessage, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="48" Width="820" VerticalContentAlignment="Center"/>
-            <Button Content="Отправить" Command="{Binding ChatVM.SendMessageCommand}" Style="{StaticResource SendButton}" Margin="12,0,0,0"/>
+        <!-- Header -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,8">
+          <StackPanel Orientation="Vertical">
+            <TextBlock Text="{Binding SelectedChat}" FontSize="20" FontWeight="Bold"/>
+            <TextBlock Text="Общий канал" Foreground="{StaticResource MutedBrush}" FontSize="12"/>
           </StackPanel>
-        </Grid>
-      </Border>
-
-      <!-- Правая панель: задачи и помощник -->
-      <Border Grid.Column="2" Background="{DynamicResource PanelBrush}" Padding="12">
-        <StackPanel>
-          <TextBlock Text="Задачи" FontSize="16" FontWeight="Bold"/>
-          <StackPanel Orientation="Horizontal" Margin="0,8,0,6">
-            <TextBox Text="{Binding TasksVM.NewTaskTitle}" Width="220"/>
-            <Button Content="Добавить" Command="{Binding TasksVM.AddTaskCommand}" Margin="8,0,0,0"/>
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+            <Button Content="Участники" Style="{StaticResource RoundedButton}" Margin="0,0,8,0"/>
+            <Button Content="Настройки" Style="{StaticResource RoundedButton}"/>
           </StackPanel>
+        </DockPanel>
 
-          <ItemsControl ItemsSource="{Binding TasksVM.Tasks}" Margin="0,6,0,0">
+        <!-- Messages area -->
+        <ScrollViewer Grid.Row="1" x:Name="MessagesScroll" VerticalScrollBarVisibility="Auto" Margin="0,6,0,0">
+          <ItemsControl ItemsSource="{Binding ChatVM.Messages}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <DockPanel Margin="4">
-                  <CheckBox IsChecked="{Binding IsDone}" VerticalAlignment="Center" Margin="4"/>
-                  <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="8,0,0,0"/>
-                </DockPanel>
+                <Grid Margin="8">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="56"/>
+                    <ColumnDefinition Width="*"/>
+                  </Grid.ColumnDefinitions>
+
+                  <Border Grid.Column="0" Width="48" Height="48" CornerRadius="10" Background="#163A3A" VerticalAlignment="Top">
+                    <TextBlock Text="{Binding Sender, Converter={StaticResource InitialsConverter}}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+                  </Border>
+
+                  <Border Grid.Column="1"
+                          Background="{Binding IsSentByMe, Converter={StaticResource BoolToBrushConverter}}"
+                          Padding="12" CornerRadius="12" MaxWidth="820" HorizontalAlignment="{Binding IsSentByMe, Converter={StaticResource BoolToAlignmentConverter}}">
+                    <StackPanel>
+                      <TextBlock Text="{Binding Sender}" Foreground="{StaticResource MutedBrush}" FontSize="12"/>
+                      <TextBlock Text="{Binding Content}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                      <TextBlock Text="{Binding Timestamp, StringFormat=g}" Foreground="{StaticResource MutedBrush}" FontSize="10" HorizontalAlignment="Right" Margin="0,6,0,0"/>
+                    </StackPanel>
+                  </Border>
+                </Grid>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
+        </ScrollViewer>
 
-          <Separator Margin="0,12"/>
-          <TextBlock Text="Помощник" FontSize="16" FontWeight="Bold" Margin="0,6,0,0"/>
-          <TextBox Text="{Binding AssistantVM.Query}" Height="44" Margin="0,8,0,0"/>
-          <Button Content="Спросить" Command="{Binding AssistantVM.AskCommand}" Margin="0,8,0,0"/>
-          <ScrollViewer Height="160" Margin="0,8,0,0" Background="{DynamicResource BgBrush}">
-            <TextBlock Text="{Binding AssistantVM.Response}" TextWrapping="Wrap" Padding="8"/>
-          </ScrollViewer>
-        </StackPanel>
-      </Border>
-    </Grid>
+        <!-- Input -->
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+
+          <TextBox Grid.Column="0" Text="{Binding ChatVM.NewMessage, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="56" VerticalContentAlignment="Center" Style="{StaticResource InputBox}" />
+          <Button Grid.Column="1" Content="Отправить" Command="{Binding ChatVM.SendMessageCommand}" Style="{StaticResource SendButton}" Margin="12,0,0,0"/>
+        </Grid>
+      </Grid>
+    </Border>
+
+    <!-- RIGHT: вкладки Информация / Задачи / Помощник -->
+    <Border Grid.Column="2" Background="{StaticResource PanelBrush}" Padding="16">
+      <TabControl>
+        <TabItem Header="Информация">
+          <StackPanel Margin="6">
+            <TextBlock Text="Информация о канале" FontWeight="Bold" Margin="0,0,0,8"/>
+            <TextBlock Text="Теги" Foreground="{StaticResource MutedBrush}" Margin="0,6,0,4"/>
+            <WrapPanel>
+              <Border Style="{StaticResource TagBadge}"><TextBlock Text="general"/></Border>
+              <Border Style="{StaticResource TagBadge}"><TextBlock Text="client"/></Border>
+            </WrapPanel>
+            <Separator Margin="0,12"/>
+            <TextBlock Text="Участники" Foreground="{StaticResource MutedBrush}" Margin="0,6,0,4"/>
+            <ListBox>
+              <ListBoxItem>Антон</ListBoxItem>
+              <ListBoxItem>Саша</ListBoxItem>
+              <ListBoxItem>Рубен</ListBoxItem>
+            </ListBox>
+          </StackPanel>
+        </TabItem>
+
+        <TabItem Header="Задачи">
+          <StackPanel Margin="6">
+            <TextBlock Text="Задачи" FontWeight="Bold" Margin="0,0,0,8"/>
+            <StackPanel Orientation="Horizontal">
+              <TextBox Text="{Binding TasksVM.NewTaskTitle}" Width="220" Height="36"/>
+              <Button Content="Добавить" Command="{Binding TasksVM.AddTaskCommand}" Style="{StaticResource PrimaryButton}" Margin="8,0,0,0"/>
+            </StackPanel>
+            <ItemsControl ItemsSource="{Binding TasksVM.Tasks}" Margin="0,12,0,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <DockPanel Margin="4">
+                    <CheckBox IsChecked="{Binding IsDone}" VerticalAlignment="Center" Margin="4"/>
+                    <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                  </DockPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </TabItem>
+
+        <TabItem Header="Помощник">
+          <StackPanel Margin="6">
+            <TextBlock Text="Помощник" FontWeight="Bold" Margin="0,0,0,8"/>
+            <TextBox Text="{Binding AssistantVM.Query}" Height="40"/>
+            <Button Content="Спросить" Command="{Binding AssistantVM.AskCommand}" Style="{StaticResource PrimaryButton}" Margin="0,8,0,0"/>
+            <ScrollViewer Height="240" Margin="0,8,0,0" Background="{StaticResource BgBrush}">
+              <TextBlock Text="{Binding AssistantVM.Response}" TextWrapping="Wrap" Padding="8"/>
+            </ScrollViewer>
+          </StackPanel>
+        </TabItem>
+      </TabControl>
+    </Border>
   </Grid>
 </Window>

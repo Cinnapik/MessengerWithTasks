@@ -11,14 +11,20 @@ namespace MessengerApp.ViewModels
     {
         public ObservableCollection<string> Chats { get; } = new();
         private string _selectedChat = string.Empty;
+        public string NewChatName { get; set; } = string.Empty;
 
         private readonly ChatService _chatService;
         private readonly TaskService _taskService;
         private readonly AssistantService _assistantService;
 
-        public User CurrentUser { get; }
+        public ChatViewModel ChatVM { get; }
+        public TasksViewModel TasksVM { get; }
+        public AssistantViewModel AssistantVM { get; }
 
-        public string TitleBarDisplay => $"{CurrentUser.DisplayName} • Messenger";
+        public IRelayCommand NewChatCommand { get; }
+        public IRelayCommand SignOutCommand { get; }
+
+        public User CurrentUser { get; }
 
         public string SelectedChat
         {
@@ -30,39 +36,41 @@ namespace MessengerApp.ViewModels
             }
         }
 
-        public ChatViewModel ChatVM { get; }
-        public TasksViewModel TasksVM { get; }
-        public AssistantViewModel AssistantVM { get; }
-
-        public IRelayCommand NewChatCommand { get; }
-        public IRelayCommand SignOutCommand { get; }
-
-        public MainViewModel(ChatService chatService, TaskService taskService, AssistantService assistant, User currentUser)
+        public MainViewModel(ChatService chatService, TaskService taskService, AssistantService assistant, User user)
         {
             _chatService = chatService ?? throw new System.ArgumentNullException(nameof(chatService));
+            _task_service_guard(taskService);
             _taskService = taskService ?? throw new System.ArgumentNullException(nameof(taskService));
             _assistantService = assistant ?? throw new System.ArgumentNullException(nameof(assistant));
-            CurrentUser = currentUser ?? throw new System.ArgumentNullException(nameof(currentUser));
+            CurrentUser = user ?? throw new System.ArgumentNullException(nameof(user));
 
             ChatVM = new ChatViewModel(_chatService, _assistantService, _taskService) { CurrentUser = CurrentUser };
             TasksVM = new TasksViewModel(_taskService);
             AssistantVM = new AssistantViewModel(_assistantService, ChatVM, TasksVM, _taskService);
 
-            Chats.Add("Общий");
-            Chats.Add("Разработка");
-            Chats.Add("Личные");
-            SelectedChat = Chats[0];
+            Chats.Add("default");
+            Chats.Add("work");
+            Chats.Add("random");
+            SelectedChat = "default";
 
-            NewChatCommand = new RelayCommand(() =>
-            {
-                var name = "Чат " + (Chats.Count + 1);
-                Chats.Add(name);
-                SelectedChat = name;
-            });
-
+            NewChatCommand = new RelayCommand(CreateChat);
             SignOutCommand = new RelayCommand(SignOut);
         }
 
+        private void CreateChat()
+        {
+            var name = string.IsNullOrWhiteSpace(NewChatName) ? ("чат-" + (Chats.Count + 1)) : NewChatName.Trim();
+            Chats.Add(name);
+            SelectedChat = name;
+            NewChatName = string.Empty;
+        }
+
+        private void _task_service_guard(TaskService ts)
+        {
+            // простая проверка на null, оставлена для безопасности
+            if (ts == null) throw new System.ArgumentNullException(nameof(ts));
+        }
+ 
         private void SignOut()
         {
             var wnd = System.Windows.Application.Current.MainWindow;

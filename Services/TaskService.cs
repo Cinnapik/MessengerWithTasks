@@ -1,66 +1,24 @@
-// C:\Users\St\MessengerWithTasks\MessengerApp\Services\TaskService.cs
 using MessengerApp.Models;
-using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MessengerApp.Services
 {
     public class TaskService
     {
         private readonly StorageService _storage;
-        public TaskService(StorageService storage) => _storage = storage;
 
-        public IEnumerable<TaskItem> GetTasks()
+        public TaskService(StorageService storage)
         {
-            var list = new List<TaskItem>();
-            using var conn = _storage.GetConnection();
-            conn.Open();
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT Id, Title, IsDone FROM Tasks ORDER BY Id DESC";
-            using var rdr = cmd.ExecuteReader();
-            while (rdr.Read())
-            {
-                list.Add(new TaskItem
-                {
-                    Id = rdr.GetInt64(0),
-                    Title = rdr.IsDBNull(1) ? string.Empty : rdr.GetString(1),
-                    IsDone = rdr.GetInt32(2) == 1
-                });
-            }
-            return list;
+            _storage = storage;
         }
+
+        public IEnumerable<TaskItem> GetTasks() => _storage.Tasks.ToList();
 
         public void AddTask(TaskItem t)
         {
-            using var conn = _storage.GetConnection();
-            conn.Open();
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = "INSERT INTO Tasks (Title, IsDone) VALUES ($title, $isdone)";
-            cmd.Parameters.AddWithValue("$title", t.Title ?? string.Empty);
-            cmd.Parameters.AddWithValue("$isdone", t.IsDone ? 1 : 0);
-            cmd.ExecuteNonQuery();
-        }
-
-        public void UpdateTask(TaskItem t)
-        {
-            using var conn = _storage.GetConnection();
-            conn.Open();
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = "UPDATE Tasks SET Title = $title, IsDone = $isdone WHERE Id = $id";
-            cmd.Parameters.AddWithValue("$title", t.Title ?? string.Empty);
-            cmd.Parameters.AddWithValue("$isdone", t.IsDone ? 1 : 0);
-            cmd.Parameters.AddWithValue("$id", t.Id);
-            cmd.ExecuteNonQuery();
-        }
-
-        public void DeleteTask(long id)
-        {
-            using var conn = _storage.GetConnection();
-            conn.Open();
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = "DELETE FROM Tasks WHERE Id = $id";
-            cmd.Parameters.AddWithValue("$id", id);
-            cmd.ExecuteNonQuery();
+            t.Id = (_storage.Tasks.Count > 0) ? _storage.Tasks.Max(x => x.Id) + 1 : 1;
+            _storage.Tasks.Add(t);
         }
     }
 }

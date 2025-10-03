@@ -11,6 +11,7 @@
 
       <conv:InitialsConverter x:Key="InitialsConverter" />
       <conv:BoolToBrushConverter x:Key="BoolToBrushConverter" />
+      <conv:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter" />
     </ResourceDictionary>
   </Application.Resources>
 </Application>
